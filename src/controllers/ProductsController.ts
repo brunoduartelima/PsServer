@@ -8,8 +8,6 @@ class ProductsController {
         const { page = 1 } = request.query;
         
         try {
-            
-            const [count] = await knex('products').where({shop_id}).count();
 
             const product = await knex('products')
                 .where({shop_id})
@@ -27,9 +25,7 @@ class ProductsController {
                 .offset((Number(page) - 1) * 30);
 
             if(product.length === 0)
-                return response.status(409).send({ error: 'Products not found' });
-            
-            response.header('X-Total-Count', count['count(*)']);
+                return response.status(400).send({ error: 'Products not found' });
 
             return response.json(product);
             
@@ -117,17 +113,18 @@ class ProductsController {
     }
 
     async create (request: Request, response: Response, next: NextFunction) {
-        try {
-            const shop_id = response.locals.jwtPayload.shop_id;
+        const shop_id = response.locals.jwtPayload.shop_id;
 
-            const {
-                name,
-                code,
-                description,
-                value,
-                amount,
-                averageCost,
-                category } = request.body;
+        const {
+            name,
+            code,
+            description,
+            value,
+            amount,
+            averageCost,
+            category } = request.body;
+
+        try {
 
             await knex('products').insert({
                 name,

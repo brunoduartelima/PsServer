@@ -8,7 +8,6 @@ class ClientsController {
         const { page = 1 } = request.query;
         
         try {
-            const [count] = await knex('shops_clients').where({shop_id}).count();
             
             const client = await knex('shops_clients')
                 .where({shop_id})
@@ -33,8 +32,6 @@ class ClientsController {
 
             if(client.length === 0)
                 return response.status(400).send({ error: 'Clients not found' });
-
-            response.header('X-Total-Count', count['count(*)']);
 
             return response.json(client);
             
