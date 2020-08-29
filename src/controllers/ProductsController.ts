@@ -2,35 +2,36 @@ import { Request, Response, NextFunction } from 'express';
 
 import knex from '../database/connection';
 
-class EmployeesController {
+class ProductsController {
     async index (request: Request, response: Response, next: NextFunction) {
         const shop_id =  response.locals.jwtPayload.shop_id;
         const { page = 1 } = request.query;
         
         try {
             
-            const [count] = await knex('employees').where({shop_id}).count();
+            const [count] = await knex('products').where({shop_id}).count();
 
-            const employee = await knex('employees')
+            const product = await knex('products')
                 .where({shop_id})
                 .select(
                     'id',
                     'name',
-                    'salary',
-                    'dateBirth',
-                    'whatsapp',
-                    'active'
+                    'code',
+                    'description',
+                    'value',
+                    'amount',
+                    'averageCost'
                 )
                 .orderBy('name')
                 .limit(30)
                 .offset((Number(page) - 1) * 30);
 
-            if(employee.length === 0)
-                return response.status(400).send({ error: 'Employees not found' });
+            if(product.length === 0)
+                return response.status(409).send({ error: 'Products not found' });
             
             response.header('X-Total-Count', count['count(*)']);
 
-            return response.json(employee);
+            return response.json(product);
             
         } catch (error) {
             next(error);
@@ -39,29 +40,47 @@ class EmployeesController {
 
     async search (request: Request, response: Response, next: NextFunction) {
         const shop_id =  response.locals.jwtPayload.shop_id;
-        const { name } = request.query;
+        const { products } = request.query;
 
         try {
-            if(name === '')
+
+            if(products === '')
                 return response.status(400).send({ error: 'No search parameters sent' });
 
-            const employee = await knex('employees')
+            let product = await knex('products')
                 .where({shop_id})
                 .select(
                     'id',
                     'name',
-                    'salary',
-                    'dateBirth',
-                    'whatsapp',
-                    'active'
+                    'code',
+                    'description',
+                    'value',
+                    'amount',
+                    'averageCost'
                 )
-                .andWhere('name', 'like', '%'+String(name)+'%')
+                .andWhere('name', 'like', '%'+String(products)+'%')
                 .orderBy('name');
 
-            if(employee.length === 0)
-                return response.status(400).send({ error: 'Employee not found' });
+            if(product.length === 0) {
+                product = await knex('products')
+                    .where({shop_id})
+                    .select(
+                        'id',
+                        'name',
+                        'code',
+                        'description',
+                        'value',
+                        'amount',
+                        'averageCost'
+                    )
+                    .andWhere('code', 'like', '%'+String(products)+'%')
+                    .orderBy('name');
+            }
+            
+            if(product.length === 0)
+                return response.status(400).send({ error: 'Product not found' });
 
-            return response.json(employee);
+            return response.json(product);
             
         } catch (error) {
             next(error);
@@ -72,24 +91,25 @@ class EmployeesController {
         const shop_id =  response.locals.jwtPayload.shop_id;
         
         try { 
-            const [count] = await knex('employees').where({shop_id}).count();
+            const [count] = await knex('products').where({shop_id}).count();
 
-            const employee = await knex('employees')
-                .where({ shop_id })
+            const product = await knex('products')
+                .where({shop_id})
                 .select(
                     'id',
                     'name',
-                    'salary',
-                    'dateBirth',
-                    'whatsapp',
-                    'active'
+                    'code',
+                    'description',
+                    'value',
+                    'amount',
+                    'averageCost'
                 )
                 .orderBy('id', 'desc')
                 .limit(30);
 
             response.header('X-Total-Count', count['count(*)']); 
 
-            return response.json(employee);
+            return response.json(product);
             
         } catch (error) {
             next(error);
@@ -102,17 +122,21 @@ class EmployeesController {
 
             const {
                 name,
-                salary,
-                dateBirth,
-                whatsapp,
-                active } = request.body;
+                code,
+                description,
+                value,
+                amount,
+                averageCost,
+                category } = request.body;
 
-            await knex('employees').insert({
+            await knex('products').insert({
                 name,
-                salary,
-                dateBirth,
-                whatsapp,
-                active,
+                code,
+                description,
+                value,
+                amount,
+                averageCost,
+                category_id: category,
                 shop_id
             });
 
@@ -129,32 +153,36 @@ class EmployeesController {
 
         const {
             name,
-            salary,
-            dateBirth,
-            whatsapp,
-            active } = request.body;
+            code,
+            description,
+            value,
+            amount,
+            averageCost,
+            category } = request.body;
         
         try {
             
-            const employee = await knex('employees')
+            const product = await knex('products')
                 .where({shop_id})
                 .where({id})
                 .select('shop_id')
                 .first();
             
-            if(!employee)
-                return response.status(400).send({ error: 'Employee not found' });
+            if(!product)
+                return response.status(400).send({ error: 'Product not found' });
 
-            if(employee.shop_id !== shop_id)
+            if(product.shop_id !== shop_id)
                 return response.status(401).send({ error: 'Operation not permitted' });
 
 
-            await knex('employees').where({id}).update({
+            await knex('products').where({id}).update({
                 name,
-                salary,
-                dateBirth,
-                whatsapp,
-                active
+                code,
+                description,
+                value,
+                amount,
+                averageCost,
+                category_id: category
             });
 
             response.status(200).send();
@@ -170,19 +198,19 @@ class EmployeesController {
         
         try {
 
-            const employee = await knex('employees')
+            const product = await knex('products')
                 .where({shop_id})
                 .where({id})
                 .select('shop_id')
                 .first();
             
-            if(!employee)
-                return response.status(400).send({ error: 'Employee not found' });
+            if(!product)
+                return response.status(400).send({ error: 'Product not found' });
 
-            if(employee.shop_id !== shop_id)
+            if(product.shop_id !== shop_id)
                 return response.status(401).send({ error: 'Operation not permitted' });
 
-            await knex('employees').where({id}).delete();
+            await knex('products').where({id}).delete();
 
             response.status(200).send();
 
@@ -192,4 +220,4 @@ class EmployeesController {
     }
 }
 
-export default EmployeesController;
+export default ProductsController;

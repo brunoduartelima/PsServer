@@ -49,6 +49,9 @@ class ClientsController {
 
         try {
 
+            if(name === '')
+                return response.status(400).send({ error: 'No search parameters sent' });
+
             const client = await knex('shops_clients')
                 .where({shop_id})
                 .join('clients', 'shops_clients.client_id', 'clients.id')
@@ -104,9 +107,6 @@ class ClientsController {
                 )
                 .orderBy('id', 'desc')
                 .limit(30);
-
-            if(!client)
-                return response.status(400).send({ error: 'Clients not found' });
 
             response.header('X-Total-Count', count['count(*)']); 
 

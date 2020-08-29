@@ -5,6 +5,7 @@ import ShopsController from './controllers/ShopsController';
 import UsersController from './controllers/UsersController';
 import ClientsController from './controllers/ClientsController';
 import EmployeesController from './controllers/EmployeesController';
+import ProductsController from './controllers/ProductsController';
 
 import { checkJwt } from './middlewares/checkJwt';
 import { checkTypeUser } from './middlewares/checkTypeUser';
@@ -17,6 +18,7 @@ const sessionsController = new SessionsController();
 const clientsController = new ClientsController();
 const usersController = new UsersController();
 const employeesController = new EmployeesController();
+const productsController = new ProductsController();
 
 routes.get('/shops', [checkJwt, checkTypeUser(['master'])], shopsController.index);
 routes.post('/shops', shopsController.create);
@@ -38,11 +40,18 @@ routes.post('/clients', [checkJwt, checkCompatib], clientsController.create);
 routes.put('/clients/:id', [checkJwt, checkCompatib], clientsController.update);
 routes.delete('/clients/:id', [checkJwt, checkCompatib], clientsController.delete);
 
-routes.get('/employees/total', [checkJwt, checkCompatib], employeesController.index);
-routes.get('/employees/search', [checkJwt, checkCompatib], employeesController.search);
-routes.get('/employees', [checkJwt, checkCompatib], employeesController.lastetAdd);
-routes.post('/employees', [checkJwt, checkCompatib], employeesController.create);
-routes.put('/employees/:id', [checkJwt, checkCompatib], employeesController.update);
-routes.delete('/employees/:id', [checkJwt, checkCompatib], employeesController.delete);
+routes.get('/employees/total', [checkJwt, checkTypeUser(['master'])], employeesController.index);
+routes.get('/employees/search', [checkJwt, checkTypeUser(['master'])], employeesController.search);
+routes.get('/employees', [checkJwt, checkTypeUser(['master'])], employeesController.lastetAdd);
+routes.post('/employees', [checkJwt, checkTypeUser(['master'])], employeesController.create);
+routes.put('/employees/:id', [checkJwt, checkTypeUser(['master'])], employeesController.update);
+routes.delete('/employees/:id', [checkJwt, checkTypeUser(['master'])], employeesController.delete);
+
+routes.get('/products/total', [checkJwt, checkCompatib], productsController.index);
+routes.get('/products/search', [checkJwt, checkCompatib], productsController.search);
+routes.get('/products', [checkJwt, checkCompatib], productsController.lastetAdd);
+routes.post('/products', [checkJwt, checkCompatib], productsController.create);
+routes.put('/products/:id', [checkJwt, checkCompatib], productsController.update);
+routes.delete('/products/:id', [checkJwt, checkCompatib], productsController.delete);
 
 export default routes;
