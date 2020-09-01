@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 import knex from '../database/connection';
 const authConfig = require('../config/auth');
@@ -19,18 +20,19 @@ class ShopsController {
     }
 
     async create (request: Request, response: Response, next: NextFunction) {
-        try {
-            const {  
-                name,  
-                phone, 
-                cpf, 
-                companyName, 
-                companyType, 
-                uf,
-                city,
-                email,
-                password } = request.body;
+        const {  
+            name,  
+            phone, 
+            cpf, 
+            companyName, 
+            companyType, 
+            uf,
+            city,
+            email,
+            password } = request.body;
 
+        try {
+            
             const checkCpf = await knex('shops').where({ cpf }).first();
             
             if(checkCpf)
@@ -49,12 +51,15 @@ class ShopsController {
                 uf,
                 city,
             };
+
+            const generateId = crypto.randomBytes(4).toString('hex');
             
             const hash = await bcrypt.hash(password, 10);
 
             const trx = await knex.transaction();
             
-            const insertedId = await trx('shops').insert({
+            await trx('shops').insert({
+                id: generateId,
                 name,
                 phone,
                 cpf,
@@ -64,15 +69,13 @@ class ShopsController {
                 city
             });
 
-            const shop_id = insertedId[0];
-
             const insertedIdEmployee = await trx('employees').insert({
                 name,
                 salary: 0,
                 dateBirth: "2000-01-01",
                 whatsapp: phone,
                 active: true,
-                shop_id
+                shop_id: generateId
             });
 
             const employee_id = insertedIdEmployee[0];
@@ -81,7 +84,7 @@ class ShopsController {
                 email,
                 password: hash,
                 type: 'master',
-                shop_id,
+                shop_id: generateId,
                 employee_id
             });
 
@@ -89,7 +92,7 @@ class ShopsController {
 
             const id = userId[0];
 
-            const token = jwt.sign({ user_id: id, shop_id: shop_id }, authConfig.secret, {
+            const token = jwt.sign({ user_id: id, shop_id: generateId }, authConfig.secret, {
                 expiresIn: "1h",
             });
 

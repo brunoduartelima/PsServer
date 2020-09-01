@@ -10,8 +10,16 @@ export async function up(knex: Knex) {
         table.integer('client_id').notNullable();
         table.integer('sale_id').notNullable();
 
-        table.foreign('client_id').references('id').inTable('clients').onDelete('CASCADE').onUpdate('CASCADE');
-        table.foreign('sale_id').references('id').inTable('sales').onDelete('CASCADE').onUpdate('CASCADE');
+        table.foreign('client_id')
+            .references('id')
+            .inTable('clients')
+            .onUpdate('CASCADE');
+        
+        table.foreign('sale_id')
+            .references('id')
+            .inTable('sales')
+            .onDelete('CASCADE')
+            .onUpdate('CASCADE');
 
         table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
         table.timestamp('updated_at').defaultTo(knex.fn.now());

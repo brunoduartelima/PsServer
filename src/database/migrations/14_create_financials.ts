@@ -11,9 +11,12 @@ export async function up(knex: Knex) {
         table.integer('parcel_amount').nullable();
         table.date('due_date').notNullable();
         table.boolean('active').notNullable();
-        table.integer('shop_id').notNullable();
+        table.string('shop_id').notNullable();
 
-        table.foreign('shop_id').references('id').inTable('shops').onDelete('CASCADE');
+        table.foreign('shop_id')
+            .references('id')
+            .inTable('shops')
+            .onDelete('CASCADE');
 
         table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
         table.timestamp('updated_at').defaultTo(knex.fn.now());

@@ -104,8 +104,6 @@ class EmployeesController {
         
         try {
 
-           
-
             await knex('employees').insert({
                 name,
                 salary,

@@ -2,28 +2,30 @@ import { Request, Response, NextFunction } from 'express';
 
 import knex from '../database/connection';
 
-class CategorysController {
+class ServicesController {
     async index (request: Request, response: Response, next: NextFunction) {
         const shop_id =  response.locals.jwtPayload.shop_id;
         const { page = 1 } = request.query;
         
         try {
 
-            const category = await knex('categorys')
+            const service = await knex('services')
                 .where({shop_id})
                 .select(
                     'id',
                     'name',
-                    'description'
+                    'description',
+                    'value',
+                    'averageTime'
                 )
                 .orderBy('name')
                 .limit(30)
                 .offset((Number(page) - 1) * 30);
 
-            if(category.length === 0)
-                return response.status(400).send({ error: 'Categorys not found' });
+            if(service.length === 0)
+                return response.status(400).send({ error: 'Services not found' });
 
-            return response.json(category);
+            return response.json(service);
             
         } catch (error) {
             next(error);
@@ -32,27 +34,47 @@ class CategorysController {
 
     async search (request: Request, response: Response, next: NextFunction) {
         const shop_id =  response.locals.jwtPayload.shop_id;
-        const { name } = request.query;
+        const { products } = request.query;
 
         try {
 
-            if(name === '')
+            if(products === '')
                 return response.status(400).send({ error: 'No search parameters sent' });
 
-            const category = await knex('categorys')
+            let product = await knex('products')
                 .where({shop_id})
                 .select(
                     'id',
                     'name',
-                    'description'
+                    'code',
+                    'description',
+                    'value',
+                    'amount',
+                    'averageCost'
                 )
-                .andWhere('name', 'like', '%'+String(name)+'%')
+                .andWhere('name', 'like', '%'+String(products)+'%')
                 .orderBy('name');
 
-            if(category.length === 0)
-                return response.status(400).send({ error: 'Category not found' });
+            if(product.length === 0) {
+                product = await knex('products')
+                    .where({shop_id})
+                    .select(
+                        'id',
+                        'name',
+                        'code',
+                        'description',
+                        'value',
+                        'amount',
+                        'averageCost'
+                    )
+                    .andWhere('code', 'like', '%'+String(products)+'%')
+                    .orderBy('name');
+            }
+            
+            if(product.length === 0)
+                return response.status(400).send({ error: 'Product not found' });
 
-            return response.json(category);
+            return response.json(product);
             
         } catch (error) {
             next(error);
@@ -63,21 +85,25 @@ class CategorysController {
         const shop_id =  response.locals.jwtPayload.shop_id;
         
         try { 
-            const [count] = await knex('categorys').where({shop_id}).count();
+            const [count] = await knex('products').where({shop_id}).count();
 
-            const category = await knex('categorys')
+            const product = await knex('products')
                 .where({shop_id})
                 .select(
                     'id',
                     'name',
-                    'description'
+                    'code',
+                    'description',
+                    'value',
+                    'amount',
+                    'averageCost'
                 )
                 .orderBy('id', 'desc')
                 .limit(30);
 
             response.header('X-Total-Count', count['count(*)']); 
 
-            return response.json(category);
+            return response.json(product);
             
         } catch (error) {
             next(error);
@@ -85,25 +111,26 @@ class CategorysController {
     }
 
     async create (request: Request, response: Response, next: NextFunction) {
-        const shop_id = response.locals.jwtPayload.shop_id;
-
-        const {
-            name,
-            description } = request.body;
-
         try {
+            const shop_id = response.locals.jwtPayload.shop_id;
 
-            const category = await knex('categorys')
-                .where({shop_id})
-                .where({name})
-                .first();
-
-            if(category)
-                return response.status(400).send({ error: 'Name already used' });
-
-            await knex('categorys').insert({
+            const {
                 name,
+                code,
                 description,
+                value,
+                amount,
+                averageCost,
+                category } = request.body;
+
+            await knex('products').insert({
+                name,
+                code,
+                description,
+                value,
+                amount,
+                averageCost,
+                category_id: category,
                 shop_id
             });
 
@@ -120,26 +147,36 @@ class CategorysController {
 
         const {
             name,
-            description } = request.body;
+            code,
+            description,
+            value,
+            amount,
+            averageCost,
+            category } = request.body;
         
         try {
             
-            const category = await knex('categorys')
+            const product = await knex('products')
                 .where({shop_id})
                 .where({id})
                 .select('shop_id')
                 .first();
             
-            if(!category)
-                return response.status(400).send({ error: 'Category not found' });
+            if(!product)
+                return response.status(400).send({ error: 'Product not found' });
 
-            if(category.shop_id !== shop_id)
+            if(product.shop_id !== shop_id)
                 return response.status(401).send({ error: 'Operation not permitted' });
 
 
-            await knex('categorys').where({id}).update({
+            await knex('products').where({id}).update({
                 name,
-                description
+                code,
+                description,
+                value,
+                amount,
+                averageCost,
+                category_id: category
             });
 
             response.status(200).send();
@@ -155,19 +192,19 @@ class CategorysController {
         
         try {
 
-            const category = await knex('categorys')
+            const product = await knex('products')
                 .where({shop_id})
                 .where({id})
                 .select('shop_id')
                 .first();
             
-            if(!category)
-                return response.status(400).send({ error: 'Category not found' });
+            if(!product)
+                return response.status(400).send({ error: 'Product not found' });
 
-            if(category.shop_id !== shop_id)
+            if(product.shop_id !== shop_id)
                 return response.status(401).send({ error: 'Operation not permitted' });
 
-            await knex('categorys').where({id}).delete();
+            await knex('products').where({id}).delete();
 
             response.status(200).send();
 
@@ -177,4 +214,4 @@ class CategorysController {
     }
 }
 
-export default CategorysController;
+export default ServicesController;

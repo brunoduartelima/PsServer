@@ -10,17 +10,19 @@ class ProductsController {
         try {
 
             const product = await knex('products')
-                .where({shop_id})
+                .where('products.shop_id', shop_id)
+                .leftJoin('categorys','products.category_id','categorys.id')
                 .select(
-                    'id',
-                    'name',
-                    'code',
-                    'description',
-                    'value',
-                    'amount',
-                    'averageCost'
+                    'products.id',
+                    'products.name',
+                    'products.code',
+                    'products.description',
+                    'products.value',
+                    'products.amount',
+                    'products.averageCost',
+                    knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
                 )
-                .orderBy('name')
+                .orderBy('products.name')
                 .limit(30)
                 .offset((Number(page) - 1) * 30);
 
@@ -44,31 +46,37 @@ class ProductsController {
                 return response.status(400).send({ error: 'No search parameters sent' });
 
             let product = await knex('products')
-                .where({shop_id})
+                .where('products.shop_id', shop_id)
+                .leftJoin('categorys','products.category_id','categorys.id')
                 .select(
-                    'id',
-                    'name',
-                    'code',
-                    'description',
-                    'value',
-                    'amount',
-                    'averageCost'
+                    'products.id',
+                    'products.name',
+                    'products.code',
+                    'products.description',
+                    'products.value',
+                    'products.amount',
+                    'products.averageCost',
+                    knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
                 )
+                .orderBy('products.name')
                 .andWhere('name', 'like', '%'+String(products)+'%')
                 .orderBy('name');
 
             if(product.length === 0) {
                 product = await knex('products')
-                    .where({shop_id})
+                    .where('products.shop_id', shop_id)
+                    .leftJoin('categorys','products.category_id','categorys.id')
                     .select(
-                        'id',
-                        'name',
-                        'code',
-                        'description',
-                        'value',
-                        'amount',
-                        'averageCost'
+                        'products.id',
+                        'products.name',
+                        'products.code',
+                        'products.description',
+                        'products.value',
+                        'products.amount',
+                        'products.averageCost',
+                        knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
                     )
+                    .orderBy('products.name')
                     .andWhere('code', 'like', '%'+String(products)+'%')
                     .orderBy('name');
             }
@@ -90,15 +98,17 @@ class ProductsController {
             const [count] = await knex('products').where({shop_id}).count();
 
             const product = await knex('products')
-                .where({shop_id})
+                .where('products.shop_id', shop_id)
+                .leftJoin('categorys','products.category_id','categorys.id')
                 .select(
-                    'id',
-                    'name',
-                    'code',
-                    'description',
-                    'value',
-                    'amount',
-                    'averageCost'
+                    'products.id',
+                    'products.name',
+                    'products.code',
+                    'products.description',
+                    'products.value',
+                    'products.amount',
+                    'products.averageCost',
+                    knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
                 )
                 .orderBy('id', 'desc')
                 .limit(30);
@@ -125,6 +135,14 @@ class ProductsController {
             category } = request.body;
 
         try {
+
+            const category = await knex('categorys')
+                .where({shop_id})
+                .where({name})
+                .first();
+
+            if(category)
+                return response.status(400).send({ error: 'Name already used' });
 
             await knex('products').insert({
                 name,

@@ -16,7 +16,7 @@ class SessionsController {
         try {
 
             const user = await knex('users')
-                .where({ email })
+                .where({email})
                 .select('password')
                 .select('id')
                 .select('shop_id')
@@ -39,7 +39,7 @@ class SessionsController {
                     .first();
                 
                 if(!employeeCheck)
-                    return response.status(400).json({ error: 'User is inactive on the server' });
+                    return response.status(401).json({ error: 'User is inactive on the server' });
             }
 
             const shop_id = user.shop_id;
@@ -53,7 +53,7 @@ class SessionsController {
                     expiresIn: "1h",
                 });
 
-            return response.json({
+            return response.status(201).json({
                 companyName: companyName.companyName, 
                 token
             });

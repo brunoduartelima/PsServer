@@ -9,10 +9,17 @@ export async function up(knex: Knex) {
         table.decimal('descont', 5).nullable();
         table.date('date').notNullable();
         table.integer('client_id').notNullable();
-        table.integer('shop_id').notNullable();
+        table.string('shop_id').notNullable();
 
-        table.foreign('client_id').references('id').inTable('clients').onDelete('CASCADE').onUpdate('CASCADE');
-        table.foreign('shop_id').references('id').inTable('shops').onDelete('CASCADE');
+        table.foreign('client_id')
+            .references('id')
+            .inTable('clients')
+            .onUpdate('CASCADE');
+        
+        table.foreign('shop_id')
+            .references('id')
+            .inTable('shops')
+            .onDelete('CASCADE');
 
         table.timestamp('updated_at').defaultTo(knex.fn.now());
     });

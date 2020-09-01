@@ -9,8 +9,17 @@ export async function up(knex: Knex) {
         table.integer('term_id').nullable();
         table.integer('financial_id').nullable();
 
-        table.foreign('term_id').references('id').inTable('term').onDelete('CASCADE').onUpdate('CASCADE');
-        table.foreign('financial_id').references('id').inTable('financials').onDelete('CASCADE').onUpdate('CASCADE');
+        table.foreign('term_id')
+            .references('id')
+            .inTable('term')
+            .onDelete('CASCADE')
+            .onUpdate('CASCADE');
+        
+        table.foreign('financial_id')
+            .references('id')
+            .inTable('financials')
+            .onDelete('CASCADE')
+            .onUpdate('CASCADE');
 
         table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
     });
