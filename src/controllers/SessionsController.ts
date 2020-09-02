@@ -30,26 +30,20 @@ class SessionsController {
             if(!await bcrypt.compare(password, user.password))
                 return response.status(400).json({ error: 'Invalid password' }); 
             
-            if(user.employee_id !== null) {
-                const employeeId = user.employee_id;
-
-                const employeeCheck = await knex('employees')
-                    .where('id', employeeId)
+            const employeeCheck = await knex('employees')
+                    .where('id', user.employee_id)
                     .where('active', true)
                     .first();
                 
-                if(!employeeCheck)
-                    return response.status(401).json({ error: 'User is inactive on the server' });
-            }
-
-            const shop_id = user.shop_id;
+            if(!employeeCheck)
+                return response.status(401).json({ error: 'User is inactive on the server' });
 
             const companyName = await knex('shops')
-                .where('id', shop_id)
+                .where('id', user.shop_id)
                 .select('companyName')
                 .first();
 
-            const token = jwt.sign({ user_id: user.id, shop_id: shop_id }, authConfig.secret, {
+            const token = jwt.sign({ user_id: user.id, shop_id: user.shop_id }, authConfig.secret, {
                     expiresIn: "1h",
                 });
 

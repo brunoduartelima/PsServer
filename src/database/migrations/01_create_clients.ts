@@ -12,6 +12,8 @@ export async function up(knex: Knex) {
         table.string('neighborhood').notNullable();
         table.string('cep').notNullable();
         table.string('sex').notNullable();
+        table.integer('cpf').notNullable();
+        table.string('email').nullable();
 
         table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
         table.timestamp('updated_at').defaultTo(knex.fn.now()); 

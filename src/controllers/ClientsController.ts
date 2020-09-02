@@ -9,9 +9,9 @@ class ClientsController {
         
         try {
             
-            const client = await knex('shops_clients')
+            const client = await knex('clients')
                 .where({shop_id})
-                .join('clients', 'shops_clients.client_id', 'clients.id')
+                .join('shops_clients','clients.id', 'shops_clients.client_id')
                 .select(
                     'id',
                     'name',
@@ -49,9 +49,9 @@ class ClientsController {
             if(name === '')
                 return response.status(400).send({ error: 'No search parameters sent' });
 
-            const client = await knex('shops_clients')
+            const client = await knex('clients')
                 .where({shop_id})
-                .join('clients', 'shops_clients.client_id', 'clients.id')
+                .join('shops_clients','clients.id', 'shops_clients.client_id')
                 .andWhere('name', 'like', '%'+String(name)+'%')
                 .select(
                     'id',
@@ -85,9 +85,9 @@ class ClientsController {
         try {    
             const [count] = await knex('shops_clients').where({shop_id}).count();
 
-            const client = await knex('shops_clients')
+            const client = await knex('clients')
                 .where({shop_id})
-                .join('clients', 'shops_clients.client_id', 'clients.id')
+                .join('shops_clients','clients.id', 'shops_clients.client_id')
                 .select(
                     'id',
                     'name',
@@ -133,16 +133,16 @@ class ClientsController {
         try {
 
             const controlClientCpf = await knex('shops_clients')
-                .where({shop_id})
-                .where({cpf})
+                .where('shops_clients.shop_id', shop_id).andWhere('clients.cpf', cpf)
+                .join('clients','shops_clients.client_id','clients.id')
                 .first();
 
             if(controlClientCpf)
                 return response.status(400).send({ error: 'CPF already registered' });
 
             const controlClientEmail = await knex('shops_clients')
-                .where({shop_id})
-                .where({email})
+                .where('shops_clients.shop_id', shop_id).andWhere('clients.email', email)
+                .join('clients','shops_clients.client_id','clients.id')
                 .first();
 
             if(controlClientEmail)
@@ -159,7 +159,9 @@ class ClientsController {
                 addressNumber,
                 neighborhood,
                 cep,
-                sex
+                sex,
+                email,
+                cpf
             });
 
             const client_id = insertedId[0];
@@ -168,8 +170,6 @@ class ClientsController {
                 .insert({
                     shop_id,
                     client_id,
-                    email,
-                    cpf
                 });
             
             await trx.commit();
@@ -201,21 +201,21 @@ class ClientsController {
         try {
             
             const client = await knex('shops_clients')
-                .where('client_id', id)
-                .where({shop_id})
-                .select('shop_id', 'cpf', 'email')
+                .where('shops_clients.shop_id', shop_id).andWhere('clients.id', id)
+                .join('clients','shops_clients.client_id', 'clients.id')
+                .select(
+                    'clients.cpf',
+                    'clients.email'
+                )
                 .first();
 
             if(!client)
                 return response.status(400).send({ error: 'Client not found' });
 
-            if(client.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
-
             if(client.cpf !== cpf) {
                 const controlClientCpf = await knex('shops_clients')
-                    .where({shop_id})
-                    .where({cpf})
+                    .where('shops_clients.shop_id', shop_id).andWhere('clients.cpf', cpf)
+                    .join('clients','shops_clients.client_id','clients.id')
                     .first();
 
                 if(controlClientCpf)
@@ -224,17 +224,15 @@ class ClientsController {
 
             if(client.email !== email) {
                 const controlClientEmail = await knex('shops_clients')
-                    .where({shop_id})
-                    .where({email})
+                    .where('shops_clients.shop_id', shop_id).andWhere('clients.email', email)
+                    .join('clients','shops_clients.client_id','clients.id')
                     .first();
 
                 if(controlClientEmail)
                     return response.status(400).send({ error: 'E-mail already registered' });
             }
 
-            const trx = await knex.transaction();
-
-            await trx('clients').where({id}).update({
+            await knex('clients').where({id}).update({
                 name,
                 dateBirth,
                 phoneFixed,
@@ -243,15 +241,10 @@ class ClientsController {
                 addressNumber,
                 neighborhood,
                 cep,
-                sex
-            });
-
-            await trx('shops_clients').where({client_id: id}).update({
+                sex,
                 cpf,
                 email
             });
-
-            await trx.commit();
 
             response.status(200).send();
 
@@ -267,10 +260,13 @@ class ClientsController {
         try {
 
             const client = await knex('shops_clients')
-                .where('client_id', id)
-                .where({shop_id})
-                .select('shop_id')
+                .where('shops_clients.shop_id', shop_id).andWhere('clients.id', id)
+                .join('clients','shops_clients.client_id', 'clients.id')
+                .select(
+                    'shops_clients.shop_id'
+                )
                 .first();
+
 
             if(!client)
                 return response.status(400).send({ error: 'Client not found' });

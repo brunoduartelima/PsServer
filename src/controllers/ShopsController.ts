@@ -33,12 +33,12 @@ class ShopsController {
 
         try {
             
-            const checkCpf = await knex('shops').where({ cpf }).first();
+            const checkCpf = await knex('shops').where({cpf}).first();
             
             if(checkCpf)
                 return response.status(400).send({ error: 'CPF already registered' });
 
-            const checkEmail = await knex('users').where({ email }).first();
+            const checkEmail = await knex('users').where({email}).first();
 
             if(checkEmail)
                 return response.status(400).send({ error: 'E-mail already registered' });
