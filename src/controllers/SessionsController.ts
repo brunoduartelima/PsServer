@@ -106,18 +106,19 @@ class SessionsController {
                         return response.status(400).send({ error: 'Cannot send forgot password email' });
                 });
                 
+            } else {
+                
+                mailer.sendMail({
+                    to: email,
+                    from: 'oi@psmanager.com.br',
+                    subject: 'Recuperar senha',
+                    html: `<p>Você esqueceu sua senha? Não tem problema, utilize esse token: ${token}</p>`,
+    
+                }, (error) => {
+                    if(error)
+                        return response.status(400).send({ error: 'Cannot send forgot password email' });
+                });
             }
-
-            mailer.sendMail({
-                to: email,
-                from: 'oi@psmanager.com.br',
-                subject: 'Recuperar senha',
-                html: `<p>Você esqueceu sua senha? Não tem problema, utilize esse token: ${token}</p>`,
-
-            }, (error) => {
-                if(error)
-                    return response.status(400).send({ error: 'Cannot send forgot password email' });
-            });
 
             return response.send();
 
