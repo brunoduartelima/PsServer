@@ -15,7 +15,6 @@ export async function up(knex: Knex) {
         table.foreign('employee_id')
             .references('id')
             .inTable('employees')
-            .onDelete('CASCADE')
             .onUpdate('CASCADE');
         
         table.foreign('shop_id')

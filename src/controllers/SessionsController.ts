@@ -28,16 +28,18 @@ class SessionsController {
                 return response.status(400).json({ error: 'No USER found with this email' });
             
             if(!await bcrypt.compare(password, user.password))
-                return response.status(400).json({ error: 'Invalid password' }); 
-            
-            const employeeCheck = await knex('employees')
+                return response.status(400).json({ error: 'Invalid password' });
+
+            if(user.type !== 'master') {
+                const employeeCheck = await knex('employees')
                     .where('id', user.employee_id)
                     .where('active', true)
                     .first();
-                
-            if(!employeeCheck)
-                return response.status(401).json({ error: 'User is inactive on the server' });
-
+            
+                if(!employeeCheck)
+                    return response.status(401).json({ error: 'User is inactive on the server' });
+            }
+            
             const companyName = await knex('shops')
                 .where('id', user.shop_id)
                 .select('companyName')
@@ -62,7 +64,13 @@ class SessionsController {
 
         try {
             
-            const user = await knex('users').where({email}).first();
+            const user = await knex('users')
+                .where({email})
+                .select(
+                    'type',
+                    'shop_id'
+                )
+                .first();
 
             if(!user)
                 return response.status(400).send({ error: 'User not found' });
@@ -72,12 +80,33 @@ class SessionsController {
             const now = new Date();
             now.setHours(now.getHours() + 1);
 
-           const date = now.toLocaleString();
+            const date = now.toLocaleString();
 
             await knex('users').where({email}).update({
                 passwordResetToken: token,
                 passwordResetExpires: date
             });
+
+            if(user.type === 'regular'){
+                
+                const userMaster = await knex('users')
+                    .where('shop_id', user.shop_id)
+                    .andWhere('type', 'master')
+                    .select('email')
+                    .first();
+    
+                mailer.sendMail({
+                    to: userMaster.email,
+                    from: 'oi@psmanager.com.br',
+                    subject: 'Recuperar senha',
+                    html: `<p>Um de seus usuários esqueceu a senha? Não tem problema, utilize esse token: ${token}</p>`,
+    
+                }, (error) => {
+                    if(error)
+                        return response.status(400).send({ error: 'Cannot send forgot password email' });
+                });
+                
+            }
 
             mailer.sendMail({
                 to: email,

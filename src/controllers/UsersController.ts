@@ -12,7 +12,11 @@ class UsersController {
             const users = await knex('users')
                 .join('employees','users.employee_id','employees.id')
                 .where('users.shop_id', shop_id)
-                .select('employees.name','users.email');
+                .select(
+                    'users.id',
+                    'employees.name',
+                    'users.email'
+                );
 
             return response.json(users);
 
@@ -34,9 +38,8 @@ class UsersController {
             if(amountUsers['count(*)'] >= 4)
                 return response.status(400).send({ error: 'The maximum user limit has been reached' });
 
-            const user = await knex('users').where(function () {
-                this.where({email}).orWhere({employee_id})
-                })
+            const user = await knex('users')
+                .where({email}).orWhere({employee_id})
                 .first();
             
             if(user)
