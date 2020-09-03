@@ -7,6 +7,7 @@ import ClientsController from './controllers/ClientsController';
 import EmployeesController from './controllers/EmployeesController';
 import ProductsController from './controllers/ProductsController';
 import CategorysController from './controllers/CategorysController';
+import ServicesController from './controllers/ServicesController';
 
 import { checkJwt } from './middlewares/checkJwt';
 import { checkTypeUser } from './middlewares/checkTypeUser';
@@ -21,6 +22,7 @@ const usersController = new UsersController();
 const employeesController = new EmployeesController();
 const productsController = new ProductsController();
 const categorysController = new CategorysController();
+const servicesController = new ServicesController();
 
 routes.get('/shops', [checkJwt, checkTypeUser(['master'])], shopsController.index);
 routes.post('/shops', shopsController.create);
@@ -55,6 +57,13 @@ routes.get('/products', [checkJwt, checkCompatib], productsController.lastetAdd)
 routes.post('/products', [checkJwt, checkCompatib], productsController.create);
 routes.put('/products/:id', [checkJwt, checkCompatib], productsController.update);
 routes.delete('/products/:id', [checkJwt, checkCompatib], productsController.delete);
+
+routes.get('/services/total', [checkJwt, checkCompatib], servicesController.index);
+routes.get('/services/search', [checkJwt, checkCompatib], servicesController.search);
+routes.get('/services', [checkJwt, checkCompatib], servicesController.lastetAdd);
+routes.post('/services', [checkJwt, checkCompatib], servicesController.create);
+routes.put('/services/:id', [checkJwt, checkCompatib], servicesController.update);
+routes.delete('/services/:id', [checkJwt, checkCompatib], servicesController.delete);
 
 routes.get('/categorys/total', [checkJwt, checkCompatib], categorysController.index);
 routes.get('/categorys/search', [checkJwt, checkCompatib], categorysController.search);

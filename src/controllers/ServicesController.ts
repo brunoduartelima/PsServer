@@ -10,15 +10,17 @@ class ServicesController {
         try {
 
             const service = await knex('services')
-                .where({shop_id})
+                .where('services.shop_id', shop_id)
+                .leftJoin('categorys','services.category_id','categorys.id')
                 .select(
-                    'id',
-                    'name',
-                    'description',
-                    'value',
-                    'averageTime'
+                    'services.id',
+                    'services.name',
+                    knex.raw('ifnull(services.description, "não possui") as description'),
+                    'services.value',
+                    'services.averageTime',
+                    knex.raw('ifnull(categorys.name, "não possui") as category_name')
                 )
-                .orderBy('name')
+                .orderBy('services.name')
                 .limit(30)
                 .offset((Number(page) - 1) * 30);
 
@@ -34,47 +36,31 @@ class ServicesController {
 
     async search (request: Request, response: Response, next: NextFunction) {
         const shop_id =  response.locals.jwtPayload.shop_id;
-        const { products } = request.query;
+        const { name } = request.query;
 
         try {
 
-            if(products === '')
+            if(name === '')
                 return response.status(400).send({ error: 'No search parameters sent' });
 
-            let product = await knex('products')
-                .where({shop_id})
+            const service = await knex('services')
+                .where('services.shop_id', shop_id)
+                .leftJoin('categorys','services.category_id','categorys.id')
                 .select(
-                    'id',
-                    'name',
-                    'code',
-                    'description',
-                    'value',
-                    'amount',
-                    'averageCost'
+                    'services.id',
+                    'services.name',
+                    knex.raw('ifnull(services.description, "não possui") as description'),
+                    'services.value',
+                    'services.averageTime',
+                    knex.raw('ifnull(categorys.name, "não possui") as category_name')
                 )
-                .andWhere('name', 'like', '%'+String(products)+'%')
-                .orderBy('name');
-
-            if(product.length === 0) {
-                product = await knex('products')
-                    .where({shop_id})
-                    .select(
-                        'id',
-                        'name',
-                        'code',
-                        'description',
-                        'value',
-                        'amount',
-                        'averageCost'
-                    )
-                    .andWhere('code', 'like', '%'+String(products)+'%')
-                    .orderBy('name');
-            }
+                .orderBy('services.name')
+                .andWhere('services.name', 'like', '%'+String(name)+'%');
             
-            if(product.length === 0)
-                return response.status(400).send({ error: 'Product not found' });
+            if(service.length === 0)
+                return response.status(400).send({ error: 'Service not found' });
 
-            return response.json(product);
+            return response.json(service);
             
         } catch (error) {
             next(error);
@@ -85,25 +71,26 @@ class ServicesController {
         const shop_id =  response.locals.jwtPayload.shop_id;
         
         try { 
-            const [count] = await knex('products').where({shop_id}).count();
+            
+            const [count] = await knex('services').where({shop_id}).count();
 
-            const product = await knex('products')
-                .where({shop_id})
+            const service = await knex('services')
+                .where('services.shop_id', shop_id)
+                .leftJoin('categorys','services.category_id','categorys.id')
                 .select(
-                    'id',
-                    'name',
-                    'code',
-                    'description',
-                    'value',
-                    'amount',
-                    'averageCost'
+                    'services.id',
+                    'services.name',
+                    knex.raw('ifnull(services.description, "não possui") as description'),
+                    'services.value',
+                    'services.averageTime',
+                    knex.raw('ifnull(categorys.name, "não possui") as category_name')
                 )
-                .orderBy('id', 'desc')
+                .orderBy('services.id', 'desc')
                 .limit(30);
 
             response.header('X-Total-Count', count['count(*)']); 
 
-            return response.json(product);
+            return response.json(service);
             
         } catch (error) {
             next(error);
@@ -111,25 +98,39 @@ class ServicesController {
     }
 
     async create (request: Request, response: Response, next: NextFunction) {
+        const shop_id = response.locals.jwtPayload.shop_id;
+
+        const {
+            name,
+            description,
+            value,
+            averageTime,
+            category } = request.body;
+
         try {
-            const shop_id = response.locals.jwtPayload.shop_id;
 
-            const {
+            const service = await knex('services')
+                .where({shop_id})
+                .where({name})
+                .first();
+
+            if(service)
+                return response.status(400).send({ error: 'Name already used' });
+
+            if(category !== null) {
+                const checkCategory = await knex('categorys')
+                    .where({shop_id}).andWhere('id', category)
+                    .first();
+
+                if(!checkCategory)
+                    return response.status(400).send({ error: 'Categoria não encontrada' });
+            }
+
+            await knex('services').insert({
                 name,
-                code,
                 description,
                 value,
-                amount,
-                averageCost,
-                category } = request.body;
-
-            await knex('products').insert({
-                name,
-                code,
-                description,
-                value,
-                amount,
-                averageCost,
+                averageTime,
                 category_id: category,
                 shop_id
             });
@@ -147,35 +148,46 @@ class ServicesController {
 
         const {
             name,
-            code,
             description,
             value,
-            amount,
-            averageCost,
+            averageTime,
             category } = request.body;
         
         try {
             
-            const product = await knex('products')
+            const service = await knex('services')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
+                .select('name')
                 .first();
             
-            if(!product)
-                return response.status(400).send({ error: 'Product not found' });
+            if(!service)
+                return response.status(400).send({ error: 'Service not found' });
 
-            if(product.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
+            if(service.name !== name) {
+                const checkName = await knex('services')
+                    .where({shop_id}).andWhere({name})
+                    .first();
+                
+                if(checkName)
+                    return response.status(400).send({ error: 'Este nome já existe, tente outro'});
+            }
+            
+            if(category !== null) {
+                const checkCategory = await knex('categorys')
+                    .where({shop_id}).andWhere('id', category)
+                    .first();
+
+                if(!checkCategory)
+                    return response.status(400).send({ error: 'Categoria não encontrada' });
+            }
 
 
             await knex('products').where({id}).update({
                 name,
-                code,
                 description,
                 value,
-                amount,
-                averageCost,
+                averageTime,
                 category_id: category
             });
 
@@ -192,19 +204,15 @@ class ServicesController {
         
         try {
 
-            const product = await knex('products')
+            const service = await knex('services')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
                 .first();
             
-            if(!product)
-                return response.status(400).send({ error: 'Product not found' });
+            if(!service)
+                return response.status(400).send({ error: 'Service not found' });
 
-            if(product.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
-
-            await knex('products').where({id}).delete();
+            await knex('services').where({id}).delete();
 
             response.status(200).send();
 

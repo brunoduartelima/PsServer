@@ -15,12 +15,12 @@ class ProductsController {
                 .select(
                     'products.id',
                     'products.name',
-                    'products.code',
-                    'products.description',
+                    knex.raw('ifnull(products.code, "não possui") as code'),
+                    knex.raw('ifnull(products.description, "não possui") as description'),
                     'products.value',
                     'products.amount',
                     'products.averageCost',
-                    knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
+                    knex.raw('ifnull(categorys.name, "não possui") as category_name')
                 )
                 .orderBy('products.name')
                 .limit(30)
@@ -51,16 +51,15 @@ class ProductsController {
                 .select(
                     'products.id',
                     'products.name',
-                    'products.code',
-                    'products.description',
+                    knex.raw('ifnull(products.code, "não possui") as code'),
+                    knex.raw('ifnull(products.description, "não possui") as description'),
                     'products.value',
                     'products.amount',
                     'products.averageCost',
-                    knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
+                    knex.raw('ifnull(categorys.name, "não possui") as category_name')
                 )
                 .orderBy('products.name')
-                .andWhere('name', 'like', '%'+String(products)+'%')
-                .orderBy('name');
+                .andWhere('products.name', 'like', '%'+String(products)+'%');
 
             if(product.length === 0) {
                 product = await knex('products')
@@ -69,16 +68,16 @@ class ProductsController {
                     .select(
                         'products.id',
                         'products.name',
-                        'products.code',
-                        'products.description',
+                        knex.raw('ifnull(products.code, "não possui") as code'),
+                        knex.raw('ifnull(products.description, "não possui")'),
                         'products.value',
                         'products.amount',
                         'products.averageCost',
-                        knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
+                        knex.raw('ifnull(categorys.name, "não possui") as category_name')
                     )
                     .orderBy('products.name')
-                    .andWhere('code', 'like', '%'+String(products)+'%')
-                    .orderBy('name');
+                    .andWhere('code', 'like', '%'+String(products)+'%');
+
             }
             
             if(product.length === 0)
@@ -103,14 +102,14 @@ class ProductsController {
                 .select(
                     'products.id',
                     'products.name',
-                    'products.code',
-                    'products.description',
+                    knex.raw('ifnull(products.code, "não possui") as code'),
+                    knex.raw('ifnull(products.description, "não possui") as description'),
                     'products.value',
                     'products.amount',
                     'products.averageCost',
-                    knex.raw('ifnull(categorys.name, "Não possui categoria") as category_name')
+                    knex.raw('ifnull(categorys.name, "não possui") as category_name')
                 )
-                .orderBy('id', 'desc')
+                .orderBy('products.id', 'desc')
                 .limit(30);
 
             response.header('X-Total-Count', count['count(*)']); 
@@ -136,13 +135,22 @@ class ProductsController {
 
         try {
 
-            const category = await knex('categorys')
+            const product = await knex('products')
                 .where({shop_id})
                 .where({name})
                 .first();
 
-            if(category)
+            if(product)
                 return response.status(400).send({ error: 'Name already used' });
+
+            if(category !== null) {
+                const checkCategory = await knex('categorys')
+                    .where({shop_id}).andWhere('id', category)
+                    .first();
+
+                if(!checkCategory)
+                    return response.status(400).send({ error: 'Categoria não encontrada' });
+            }
 
             await knex('products').insert({
                 name,
@@ -180,14 +188,29 @@ class ProductsController {
             const product = await knex('products')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
+                .select('name')
                 .first();
             
             if(!product)
                 return response.status(400).send({ error: 'Product not found' });
 
-            if(product.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
+            if(product.name !== name) {
+                const checkName = await knex('products')
+                    .where({shop_id}).andWhere({name})
+                    .first();
+                
+                if(checkName)
+                    return response.status(400).send({ error: 'Este nome já existe, tente outro'});
+            }
+            
+            if(category != null) {
+                const checkCategory = await knex('categorys')
+                    .where({shop_id}).andWhere('id', category)
+                    .first();
+
+                if(!checkCategory)
+                    return response.status(400).send({ error: 'Categoria não encontrada' });
+            }
 
 
             await knex('products').where({id}).update({
@@ -216,14 +239,10 @@ class ProductsController {
             const product = await knex('products')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
                 .first();
             
             if(!product)
                 return response.status(400).send({ error: 'Product not found' });
-
-            if(product.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
 
             await knex('products').where({id}).delete();
 
