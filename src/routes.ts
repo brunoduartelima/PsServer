@@ -8,6 +8,7 @@ import EmployeesController from './controllers/EmployeesController';
 import ProductsController from './controllers/ProductsController';
 import CategorysController from './controllers/CategorysController';
 import ServicesController from './controllers/ServicesController';
+import SalesController from './controllers/SalesController';
 
 import { checkJwt } from './middlewares/checkJwt';
 import { checkTypeUser } from './middlewares/checkTypeUser';
@@ -23,6 +24,7 @@ const employeesController = new EmployeesController();
 const productsController = new ProductsController();
 const categorysController = new CategorysController();
 const servicesController = new ServicesController();
+const salesController = new SalesController();
 
 routes.get('/shops', [checkJwt, checkTypeUser(['master'])], shopsController.index);
 routes.post('/shops', shopsController.create);
@@ -71,5 +73,11 @@ routes.get('/categorys', [checkJwt, checkCompatib], categorysController.lastetAd
 routes.post('/categorys', [checkJwt, checkCompatib], categorysController.create);
 routes.put('/categorys/:id', [checkJwt, checkCompatib], categorysController.update);
 routes.delete('/categorys/:id', [checkJwt, checkCompatib], categorysController.delete);
+
+routes.post('/sales', [checkJwt, checkCompatib], salesController.create);
+routes.get('/sales/total', [checkJwt, checkCompatib], salesController.index);
+routes.get('/sales/:id', [checkJwt, checkCompatib], salesController.detail);
+routes.put('/sales/:id', [checkJwt, checkCompatib], salesController.update);
+routes.delete('/sales/:id', [checkJwt, checkCompatib], salesController.delete);
 
 export default routes;
