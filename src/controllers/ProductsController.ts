@@ -27,7 +27,7 @@ class ProductsController {
                 .offset((Number(page) - 1) * 30);
 
             if(product.length === 0)
-                return response.status(400).send({ error: 'Products not found' });
+                return response.status(400).send({ error: 'Não possui nenhum produto cadastrado' });
 
             return response.json(product);
             
@@ -43,7 +43,7 @@ class ProductsController {
         try {
 
             if(products === '')
-                return response.status(400).send({ error: 'No search parameters sent' });
+                return response.status(400).send({ error: 'Nenhum parâmetro enviado para a pesquisa' });
 
             let product = await knex('products')
                 .where('products.shop_id', shop_id)
@@ -81,7 +81,7 @@ class ProductsController {
             }
             
             if(product.length === 0)
-                return response.status(400).send({ error: 'Product not found' });
+                return response.status(400).send({ error: 'Nenhum resultado foi encontrado' });
 
             return response.json(product);
             
@@ -112,7 +112,7 @@ class ProductsController {
                 .orderBy('products.id', 'desc')
                 .limit(30);
 
-            response.header('X-Total-Count', count['count(*)']); 
+            response.header('X-Total-Count', <string>count['count(*)']); 
 
             return response.json(product);
             
@@ -141,7 +141,7 @@ class ProductsController {
                 .first();
 
             if(product)
-                return response.status(400).send({ error: 'Name already used' });
+                return response.status(400).send({ error: 'Este nome já está em uso' });
 
             if(category !== null) {
                 const checkCategory = await knex('categorys')
@@ -149,7 +149,7 @@ class ProductsController {
                     .first();
 
                 if(!checkCategory)
-                    return response.status(400).send({ error: 'Categoria não encontrada' });
+                    return response.status(400).send({ error: 'Falha ao tentar encontrar categoria' });
             }
 
             await knex('products').insert({
@@ -192,7 +192,7 @@ class ProductsController {
                 .first();
             
             if(!product)
-                return response.status(400).send({ error: 'Product not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar produto' });
 
             if(product.name !== name) {
                 const checkName = await knex('products')
@@ -200,7 +200,7 @@ class ProductsController {
                     .first();
                 
                 if(checkName)
-                    return response.status(400).send({ error: 'Este nome já existe, tente outro'});
+                    return response.status(400).send({ error: 'Este nome já está em uso'});
             }
             
             if(category != null) {
@@ -209,7 +209,7 @@ class ProductsController {
                     .first();
 
                 if(!checkCategory)
-                    return response.status(400).send({ error: 'Categoria não encontrada' });
+                    return response.status(400).send({ error: 'Falha ao tentar encontrar categoria' });
             }
 
 
@@ -242,7 +242,7 @@ class ProductsController {
                 .first();
             
             if(!product)
-                return response.status(400).send({ error: 'Product not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar produto' });
 
             await knex('products').where({id}).delete();
 

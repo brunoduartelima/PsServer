@@ -25,7 +25,7 @@ class ServicesController {
                 .offset((Number(page) - 1) * 30);
 
             if(service.length === 0)
-                return response.status(400).send({ error: 'Services not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar serviços' });
 
             return response.json(service);
             
@@ -41,7 +41,7 @@ class ServicesController {
         try {
 
             if(name === '')
-                return response.status(400).send({ error: 'No search parameters sent' });
+                return response.status(400).send({ error: 'Nenhum parâmetro enviado para a pesquisa' });
 
             const service = await knex('services')
                 .where('services.shop_id', shop_id)
@@ -58,7 +58,7 @@ class ServicesController {
                 .andWhere('services.name', 'like', '%'+String(name)+'%');
             
             if(service.length === 0)
-                return response.status(400).send({ error: 'Service not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar serviço' });
 
             return response.json(service);
             
@@ -88,7 +88,7 @@ class ServicesController {
                 .orderBy('services.id', 'desc')
                 .limit(30);
 
-            response.header('X-Total-Count', count['count(*)']); 
+            response.header('X-Total-Count', <string>count['count(*)']); 
 
             return response.json(service);
             
@@ -115,7 +115,7 @@ class ServicesController {
                 .first();
 
             if(service)
-                return response.status(400).send({ error: 'Name already used' });
+                return response.status(400).send({ error: 'Este nome já está em uso' });
 
             if(category !== null) {
                 const checkCategory = await knex('categorys')
@@ -123,7 +123,7 @@ class ServicesController {
                     .first();
 
                 if(!checkCategory)
-                    return response.status(400).send({ error: 'Categoria não encontrada' });
+                    return response.status(400).send({ error: 'Falha ao tentar encontrar categoria' });
             }
 
             await knex('services').insert({
@@ -162,7 +162,7 @@ class ServicesController {
                 .first();
             
             if(!service)
-                return response.status(400).send({ error: 'Service not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar serviço' });
 
             if(service.name !== name) {
                 const checkName = await knex('services')
@@ -170,7 +170,7 @@ class ServicesController {
                     .first();
                 
                 if(checkName)
-                    return response.status(400).send({ error: 'Este nome já existe, tente outro'});
+                    return response.status(400).send({ error: 'Este nome já está em uso'});
             }
             
             if(category !== null) {
@@ -179,7 +179,7 @@ class ServicesController {
                     .first();
 
                 if(!checkCategory)
-                    return response.status(400).send({ error: 'Categoria não encontrada' });
+                    return response.status(400).send({ error: 'Falha ao tentar encontrar categoria' });
             }
 
 
@@ -210,7 +210,7 @@ class ServicesController {
                 .first();
             
             if(!service)
-                return response.status(400).send({ error: 'Service not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar serviço' });
 
             await knex('services').where({id}).delete();
 

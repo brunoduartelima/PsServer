@@ -24,7 +24,7 @@ class EmployeesController {
                 .offset((Number(page) - 1) * 30);
 
             if(employee.length === 0)
-                return response.status(400).send({ error: 'Employees not found' });
+                return response.status(400).send({ error: 'Não possui nenhum funcionário cadastrado' });
 
             return response.json(employee);
             
@@ -39,7 +39,7 @@ class EmployeesController {
 
         try {
             if(name === '')
-                return response.status(400).send({ error: 'No search parameters sent' });
+                return response.status(400).send({ error: 'NNenhum parâmetro enviado para a pesquisa' });
 
             const employee = await knex('employees')
                 .where({shop_id})
@@ -55,7 +55,7 @@ class EmployeesController {
                 .orderBy('name');
 
             if(employee.length === 0)
-                return response.status(400).send({ error: 'Employee not found' });
+                return response.status(400).send({ error: 'Nenhum resultado foi encontrado' });
 
             return response.json(employee);
             
@@ -83,7 +83,7 @@ class EmployeesController {
                 .orderBy('id', 'desc')
                 .limit(30);
 
-            response.header('X-Total-Count', count['count(*)']); 
+            response.header('X-Total-Count', <string>count['count(*)']); 
 
             return response.json(employee);
             
@@ -136,15 +136,10 @@ class EmployeesController {
             const employee = await knex('employees')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
                 .first();
             
             if(!employee)
-                return response.status(400).send({ error: 'Employee not found' });
-
-            if(employee.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
-
+                return response.status(400).send({ error: 'Falha ao tentar encontrar funcionário' });
 
             await knex('employees').where({id}).update({
                 name,
@@ -170,14 +165,10 @@ class EmployeesController {
             const employee = await knex('employees')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
                 .first();
             
             if(!employee)
-                return response.status(400).send({ error: 'Employee not found' });
-
-            if(employee.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar funcionário' });
 
             await knex('employees').where({id}).delete();
 

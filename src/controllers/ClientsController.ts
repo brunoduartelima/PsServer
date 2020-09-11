@@ -31,7 +31,7 @@ class ClientsController {
                 .offset((Number(page) - 1) * 30);
 
             if(client.length === 0)
-                return response.status(400).send({ error: 'Clients not found' });
+                return response.status(400).send({ error: 'Não possui nenhum cliente cadastrado' });
 
             return response.json(client);
             
@@ -47,7 +47,7 @@ class ClientsController {
         try {
 
             if(name === '')
-                return response.status(400).send({ error: 'No search parameters sent' });
+                return response.status(400).send({ error: 'Nenhum parâmetro enviado para a pesquisa' });
 
             const client = await knex('clients')
                 .where({shop_id})
@@ -70,7 +70,7 @@ class ClientsController {
                 .orderBy('name');
 
             if(client.length === 0)
-                return response.status(400).send({ error: 'Client not found' });
+                return response.status(400).send({ error: 'Nenhum resultado foi encontrado' });
 
             return response.json(client);
             
@@ -105,7 +105,7 @@ class ClientsController {
                 .orderBy('id', 'desc')
                 .limit(30);
 
-            response.header('X-Total-Count', count['count(*)']); 
+            response.header('X-Total-Count', <string>count['count(*)']); 
 
             return response.json(client);
             
@@ -138,7 +138,7 @@ class ClientsController {
                 .first();
 
             if(controlClientCpf)
-                return response.status(400).send({ error: 'CPF already registered' });
+                return response.status(400).send({ error: 'Este CPF já está cadastrado' });
 
             const controlClientEmail = await knex('shops_clients')
                 .where('shops_clients.shop_id', shop_id).andWhere('clients.email', email)
@@ -146,7 +146,7 @@ class ClientsController {
                 .first();
 
             if(controlClientEmail)
-                return response.status(400).send({ error: 'E-mail already registered' });
+                return response.status(400).send({ error: 'Este e-mail já está em uso' });
             
             const trx = await knex.transaction();
 
@@ -210,7 +210,7 @@ class ClientsController {
                 .first();
 
             if(!client)
-                return response.status(400).send({ error: 'Client not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar cliente' });
 
             if(client.cpf !== cpf) {
                 const controlClientCpf = await knex('shops_clients')
@@ -219,7 +219,7 @@ class ClientsController {
                     .first();
 
                 if(controlClientCpf)
-                    return response.status(400).send({ error: 'CPF already registered' });
+                    return response.status(400).send({ error: 'Este CPF já está cadastrado' });
             }
 
             if(client.email !== email) {
@@ -229,7 +229,7 @@ class ClientsController {
                     .first();
 
                 if(controlClientEmail)
-                    return response.status(400).send({ error: 'E-mail already registered' });
+                    return response.status(400).send({ error: 'Este e-mail já está em uso' });
             }
 
             await knex('clients').where({id}).update({
@@ -262,17 +262,11 @@ class ClientsController {
             const client = await knex('shops_clients')
                 .where('shops_clients.shop_id', shop_id).andWhere('clients.id', id)
                 .join('clients','shops_clients.client_id', 'clients.id')
-                .select(
-                    'shops_clients.shop_id'
-                )
                 .first();
 
 
             if(!client)
-                return response.status(400).send({ error: 'Client not found' });
-
-            if(client.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar cliente' });
             
             await knex('clients').where({id}).delete();
 

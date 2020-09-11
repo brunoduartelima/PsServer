@@ -26,7 +26,7 @@ class SalesController {
                 .offset((Number(page) - 1) * 30);
 
             if(sale.length === 0)
-                return response.status(400).send({ error: 'Sales not found' });
+                return response.status(400).send({ error: 'Não possui nenhuma venda cadastrada' });
 
             return response.json(sale);
             
@@ -46,7 +46,7 @@ class SalesController {
                 .first();
 
             if(!sale)
-                return response.status(400).send({ error: 'Venda não encontrada, tente novamente.' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar venda' });
 
             const product  = await knex('products')
                 .join('products_sales', 'products.id', 'products_sales.product_id')
@@ -90,7 +90,7 @@ class SalesController {
                 .first();
 
             if(!sale)
-                return response.status(400).send({ error: 'Venda não encontrada, tente novamente' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar venda' });
 
             const clientSale = await knex('sales')
                 .join('clients','sales.client_id','clients.id')
@@ -141,7 +141,7 @@ class SalesController {
                 .orderBy('date')
                 .limit(30);
 
-            response.header('X-Total-Count', count['count(*)']); 
+            response.header('X-Total-Count', <string>count['count(*)']); 
 
             return response.json(sale);
             
@@ -171,7 +171,7 @@ class SalesController {
                 .first();
             
             if(!checkClient)
-                return response.status(400).send({ error: 'Este cliente não está cadastrado, tente novamente.' });
+                return response.status(400).send({ error: 'Cliente não cadastrado, tente novamente.' });
 
             const trx = await knex.transaction();
 
@@ -253,7 +253,7 @@ class SalesController {
             .first();
         
         if(!sale)
-            return response.status(400).send({ error: 'Venda não encontrada' });
+            return response.status(400).send({ error: 'Falha ao tentar encontrar venda' });
 
 
         const checkClient = await knex('shops_clients')
@@ -261,7 +261,7 @@ class SalesController {
             .first();
         
         if(!checkClient)
-            return response.status(400).send({ error: 'Este cliente não está cadastrado, tente novamente.' });
+            return response.status(400).send({ error: 'Cliente não cadastrado, tente novamente.' });
 
         const trx = await knex.transaction();
         
@@ -345,7 +345,7 @@ class SalesController {
                 .first();
 
             if(!sale)
-                return response.status(400).send({ error: 'Venda não encontrada' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar venda' });
 
             await knex('sales').where({id}).delete();
 

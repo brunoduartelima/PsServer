@@ -36,12 +36,12 @@ class ShopsController {
             const checkCpf = await knex('shops').where({cpf}).first();
             
             if(checkCpf)
-                return response.status(400).send({ error: 'CPF already registered' });
+                return response.status(400).send({ error: 'Este CPF já está cadastrado' });
 
             const checkEmail = await knex('users').where({email}).first();
 
             if(checkEmail)
-                return response.status(400).send({ error: 'E-mail already registered' });
+                return response.status(400).send({ error: 'Este e-mail já está em uso' });
 
             const shop = {
                 name,
@@ -123,7 +123,7 @@ class ShopsController {
         try {
 
             if(shop_id != id)
-                return response.status(401).send({ error: 'Operation not permitted' });
+                return response.status(401).send({ error: 'Operação não permitida' });
             
             await knex('shops').where({id}).update({
                 name,  

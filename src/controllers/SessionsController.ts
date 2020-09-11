@@ -25,10 +25,10 @@ class SessionsController {
                 .first();
 
             if(!user)
-                return response.status(400).json({ error: 'No USER found with this email' });
+                return response.status(400).json({ error: 'Nenhum usuário encontrado com este e-mail' });
             
             if(!await bcrypt.compare(password, user.password))
-                return response.status(400).json({ error: 'Invalid password' });
+                return response.status(400).json({ error: 'Senha incorreta' });
 
             if(user.type !== 'master') {
                 const employeeCheck = await knex('employees')
@@ -37,7 +37,7 @@ class SessionsController {
                     .first();
             
                 if(!employeeCheck)
-                    return response.status(401).json({ error: 'User is inactive on the server' });
+                    return response.status(401).json({ error: 'Usuário com o acesso desabilitado' });
             }
             
             const companyName = await knex('shops')
@@ -73,7 +73,7 @@ class SessionsController {
                 .first();
 
             if(!user)
-                return response.status(400).send({ error: 'User not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar E-mail' });
 
             const token = crypto.randomBytes(10).toString('hex');
 
@@ -103,7 +103,7 @@ class SessionsController {
     
                 }, (error) => {
                     if(error)
-                        return response.status(400).send({ error: 'Cannot send forgot password email' });
+                        return response.status(400).send({ error: 'Não foi possível enviar um e-mail para trocar a senha' });
                 });
                 
             } else {
@@ -116,14 +116,14 @@ class SessionsController {
     
                 }, (error) => {
                     if(error)
-                        return response.status(400).send({ error: 'Cannot send forgot password email' });
+                        return response.status(400).send({ error: 'Não foi possível enviar um e-mail para trocar a senha' });
                 });
             }
 
             return response.send();
 
         } catch (error) {
-            response.status(400).send({ error: 'Erro on forgot password, try again' });
+            response.status(400).send({ error: 'Erro em "esqueci a senha", tente novamente' });
             next(error);
         }
     }
@@ -138,15 +138,15 @@ class SessionsController {
                 .first();
 
             if(!user)
-                return response.status(400).send({ error: 'User not found' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar E-mail' });
             
             if(token !== user.passwordResetToken)
-                return response.status(400).send({ error: 'Token invalid' });
+                return response.status(400).send({ error: 'Token inválido' });
             
             const now = new Date().toLocaleString();
 
             if(now > user.passwordResetExpires)
-                return response.status(400).send({ error: 'Token expired, generate a new one' });
+                return response.status(400).send({ error: 'Token expirado, solicite um novo' });
 
             const hash = await bcrypt.hash(password, 10);
 
@@ -158,7 +158,7 @@ class SessionsController {
 
             
         } catch (error) {
-            response.status(400).send({ error: 'Erro on reset password, try again' });
+            response.status(400).send({ error: 'Erro em resetar a senha, tente novamente' });
             next(error);
         }
     }

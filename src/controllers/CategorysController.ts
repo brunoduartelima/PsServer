@@ -21,7 +21,7 @@ class CategorysController {
                 .offset((Number(page) - 1) * 30);
 
             if(category.length === 0)
-                return response.status(400).send({ error: 'Categorys not found' });
+                return response.status(400).send({ error: 'Não possui nenhuma categoria cadastrada' });
 
             return response.json(category);
             
@@ -37,7 +37,7 @@ class CategorysController {
         try {
 
             if(name === '')
-                return response.status(400).send({ error: 'No search parameters sent' });
+                return response.status(400).send({ error: 'Nenhum parâmetro enviado para a pesquisa' });
 
             const category = await knex('categorys')
                 .where({shop_id})
@@ -50,7 +50,7 @@ class CategorysController {
                 .orderBy('name');
 
             if(category.length === 0)
-                return response.status(400).send({ error: 'Category not found' });
+                return response.status(400).send({ error: 'Nenhum resultado foi encontrado' });
 
             return response.json(category);
             
@@ -75,7 +75,7 @@ class CategorysController {
                 .orderBy('id', 'desc')
                 .limit(30);
 
-            response.header('X-Total-Count', count['count(*)']); 
+            response.header('X-Total-Count', <string>count['count(*)']);
 
             return response.json(category);
             
@@ -99,7 +99,7 @@ class CategorysController {
                 .first();
 
             if(category)
-                return response.status(400).send({ error: 'Name already used' });
+                return response.status(400).send({ error: 'Este nome já está em uso' });
 
             await knex('categorys').insert({
                 name,
@@ -127,15 +127,10 @@ class CategorysController {
             const category = await knex('categorys')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
                 .first();
             
             if(!category)
-                return response.status(400).send({ error: 'Category not found' });
-
-            if(category.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
-
+                return response.status(400).send({ error: 'Falha ao tentar encontrar categoria' });
 
             await knex('categorys').where({id}).update({
                 name,
@@ -158,14 +153,10 @@ class CategorysController {
             const category = await knex('categorys')
                 .where({shop_id})
                 .where({id})
-                .select('shop_id')
                 .first();
             
             if(!category)
-                return response.status(400).send({ error: 'Category not found' });
-
-            if(category.shop_id !== shop_id)
-                return response.status(401).send({ error: 'Operation not permitted' });
+                return response.status(400).send({ error: 'Falha ao tentar encontrar categoria' });
 
             await knex('categorys').where({id}).delete();
 
