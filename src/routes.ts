@@ -9,6 +9,7 @@ import ProductsController from './controllers/ProductsController';
 import CategorysController from './controllers/CategorysController';
 import ServicesController from './controllers/ServicesController';
 import SalesController from './controllers/SalesController';
+import CreditsController from './controllers/CreditsController';
 
 import { checkJwt } from './middlewares/checkJwt';
 import { checkTypeUser } from './middlewares/checkTypeUser';
@@ -25,6 +26,7 @@ const productsController = new ProductsController();
 const categorysController = new CategorysController();
 const servicesController = new ServicesController();
 const salesController = new SalesController();
+const creditsController = new CreditsController();
 
 routes.get('/shops', [checkJwt, checkTypeUser(['master'])], shopsController.index);
 routes.post('/shops', shopsController.create);
@@ -79,5 +81,11 @@ routes.get('/sales/total', [checkJwt, checkCompatib], salesController.index);
 routes.get('/sales/:id', [checkJwt, checkCompatib], salesController.detail);
 routes.put('/sales/:id', [checkJwt, checkCompatib], salesController.update);
 routes.delete('/sales/:id', [checkJwt, checkCompatib], salesController.delete);
+
+routes.get('/credits/total', [checkJwt, checkCompatib], creditsController.index);
+routes.get('/credits/search', [checkJwt, checkCompatib], creditsController.search);
+routes.post('/credits', [checkJwt, checkCompatib], creditsController.create);
+routes.put('/credits/:id', [checkJwt, checkCompatib], creditsController.update);
+routes.delete('/credits/:id', [checkJwt, checkCompatib], creditsController.delete);
 
 export default routes;

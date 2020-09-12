@@ -1,19 +1,13 @@
 import Knex from 'knex';
 
 export async function up(knex: Knex) {
-    return knex.schema.createTable('term', table => {
+    return knex.schema.createTable('credits', table => {
         table.increments('id').primary();
         table.integer('amount').notNullable();
         table.decimal('value_entry', 5).nullable();
         table.date('due_date').notNullable();
         table.boolean('active').notNullable();
-        table.integer('client_id').notNullable();
         table.integer('sale_id').notNullable();
-
-        table.foreign('client_id')
-            .references('id')
-            .inTable('clients')
-            .onUpdate('CASCADE');
         
         table.foreign('sale_id')
             .references('id')
@@ -28,5 +22,5 @@ export async function up(knex: Knex) {
 }
 
 export async function down(knex: Knex) {
-    return knex.schema.dropTable('term');
+    return knex.schema.dropTable('credits');
 }
